@@ -1,10 +1,12 @@
 package cl.usach.diinf.led;
 
+import android.app.ListActivity;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Html;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -90,6 +92,9 @@ public class MainActivity extends ActionBarActivity {
 
     ListView yourListView = null;
     ListAdapter customAdapter = null;
+    List<noticiaDIINF> yourData = null;
+
+    boolean first = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,11 +132,11 @@ public class MainActivity extends ActionBarActivity {
         yourListView = (ListView) findViewById(R.id.listView);
 
 
-        yourListView.setAdapter(customAdapter);
+
+
 
 
         new JsonFeedTask(getApplicationContext()).execute();
-
 
 
 
@@ -141,6 +146,14 @@ public class MainActivity extends ActionBarActivity {
 
         final Runnable r = new Runnable() {
             public void run() {
+
+                //TEST
+                refreshNoticias();
+
+
+                //FIN-TEST
+
+
                 int M = 0;
                 int N = urls.length-1;
                 int L = images.length-1;
@@ -221,6 +234,8 @@ public class MainActivity extends ActionBarActivity {
 
 
 
+
+
     }
 
     @Override
@@ -251,6 +266,39 @@ public class MainActivity extends ActionBarActivity {
     }
 
 
+    public void refreshNoticias() {
+
+            Log.d(TAG, "Refresh News");
+        if(yourData!=null) {
+
+            Log.d(TAG, "Data != null");
+
+            if (first == true) {
+                Log.d(TAG, "Primera vez, seteando el adapter");
+                customAdapter = new ListAdapter(getBaseContext(), R.layout.listnoticia, yourData);
+
+                yourListView.setAdapter(customAdapter);
+
+                first = false;
+
+            }
+
+
+
+
+
+
+            new JsonFeedTask(getApplicationContext()).execute();
+
+
+        }else{
+            Log.d(TAG, "Data == null");
+        }
+
+
+    }
+
+
     class JsonFeedTask extends AsyncTask<String, Void, String> {
 
         private Exception exception;
@@ -261,7 +309,7 @@ public class MainActivity extends ActionBarActivity {
             this.context = context;
 
         }
-
+        @Override
         protected String doInBackground(String... url) {
             try {
                 //JSON
@@ -277,9 +325,9 @@ public class MainActivity extends ActionBarActivity {
                 JSONArray json=jParser.getJSONFromUrl(url_json);
 
 
-                Log.d(TAG,json.toString());
+                Log.d(TAG, json.toString());
 
-                List<noticiaDIINF> yourData = new ArrayList<noticiaDIINF>();
+                yourData = new ArrayList<noticiaDIINF>();
 
                 try {
                     for(int i=0;i<json.length();i++)
@@ -294,8 +342,12 @@ public class MainActivity extends ActionBarActivity {
                         String DESCRIPCION=c.getString(TAG_descripcion);
                         String FUENTE=c.getString(TAG_fuente);
                         String FECHA=c.getString(TAG_fecha);
-
-
+/*
+                        Log.d(TAG,"TITULO: " + TITULO);
+                        Log.d(TAG,"DESCRIPCION: " + DESCRIPCION);
+                        Log.d(TAG,"FUENTE: " + FUENTE);
+                        Log.d(TAG,"FECHA: " + FECHA);
+*/
                         yourData.add(new noticiaDIINF(TITULO, DESCRIPCION, FUENTE, FECHA));
 
 
@@ -305,14 +357,10 @@ public class MainActivity extends ActionBarActivity {
                     e.printStackTrace();
                 }
 
-                customAdapter = new ListAdapter(context, R.layout.listnoticia, yourData);
-
-                //yourListView.setAdapter(customAdapter);
-
-                customAdapter.notifyDataSetChanged();
 
 
-                Log.d(TAG,json.toString());
+
+                //Log.d(TAG,json.toString());
 
 
                 //Fin JSON
@@ -326,9 +374,60 @@ public class MainActivity extends ActionBarActivity {
             return null;
         }
 
+        //@TODO: Esto no se ejecuta!!!
+    
         protected void onPostExecute() {
             // TODO: check this.exception
             // TODO: do something with the feed
+
+            customAdapter.notifyDataSetChanged();
+
+
+            yourListView.post(new Runnable() {
+                public void run() {
+
+                    int i = 0;
+
+                    int largo = yourListView.getCount();
+                    int posicion_actual = i;
+
+
+                        while(i<largo){
+
+                            try {
+                                Log.d(TAG, "Entre en el while");
+
+
+                                //Thread.sleep(10000);
+
+
+                                posicion_actual = i % largo;
+                                Log.d(TAG, "i              : " + i);
+                                Log.d(TAG, "largo          : " + largo);
+
+                                Log.d(TAG, "Posicion actual: " + posicion_actual);
+
+                                yourListView.smoothScrollToPosition(posicion_actual);
+
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                            i++;
+
+                        }
+
+
+
+                    }
+
+
+
+            });
+
+
+
         }
     }
 
@@ -379,20 +478,20 @@ public class MainActivity extends ActionBarActivity {
             if (p != null) {
 
                 if (tt != null) {
-                    tt.setText(""+p.getTitulo());
+                    tt.setText(""+ Html.fromHtml(p.getTitulo()));
                 }
                 if (tt1 != null) {
 
-                    tt1.setText(""+p.getDescripcion());
+                    tt1.setText(""+Html.fromHtml(p.getDescripcion()));
                 }
                 if (tt2 != null) {
 
-                    tt2.setText(""+p.getFuente());
+                    tt2.setText(""+Html.fromHtml(p.getFuente()));
                 }
 
                 if (tt3 != null) {
 
-                    tt3.setText(""+p.getFecha());
+                    tt3.setText(""+Html.fromHtml(p.getFecha()));
                 }
 
 

@@ -42,10 +42,19 @@
             android:gravity="right"
             android:textAlignment="gravity"
 
+            android:fontFamily="Roboto"
             android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="10dp"
-            android:fontFamily="Roboto" />
+            android:layout_alignParentStart="true" />
+
+        <ImageView
+            android:layout_width="62dp"
+            android:layout_height="108dp"
+            android:id="@+id/imageView"
+            android:src="@drawable/logousach"
+            android:layout_gravity="right"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_toEndOf="@+id/textView" />
 
         <TextClock
             android:layout_width="wrap_content"
@@ -65,8 +74,8 @@
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="Noticias"
             android:id="@+id/textView2"
-            android:layout_below="@+id/textView"
-            android:layout_centerHorizontal="true" />
+            android:layout_below="@+id/imageView"
+            android:layout_toStartOf="@+id/imageView" />
 
         <ListView
             android:layout_width="wrap_content"
@@ -80,15 +89,6 @@
 
 
     </RelativeLayout>
-
-    <ImageView
-        android:layout_width="62dp"
-        android:layout_height="108dp"
-        android:id="@+id/imageView"
-        android:src="@drawable/logousach"
-        android:layout_gravity="right"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true" />
 
     <TextView
         android:layout_width="wrap_content"

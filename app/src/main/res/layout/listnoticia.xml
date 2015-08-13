@@ -9,25 +9,29 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Titulo"
         android:id="@+id/titulo" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Fecha"
+        android:id="@+id/fecha"
+        android:textSize="10dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Descripcion"
-        android:id="@+id/descripcion" />
+        android:id="@+id/descripcion"
+        android:textSize="12dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Fuente"
-        android:id="@+id/fuente" />
+        android:id="@+id/fuente"
+        android:textSize="10dp" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="Fecha"
-        android:id="@+id/fecha" />
+
 </LinearLayout>
