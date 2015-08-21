@@ -1,59 +1,42 @@
 package cl.usach.diinf.led;
 
-import android.app.ListActivity;
 import android.content.Context;
-import android.os.AsyncTask;
+
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.Html;
 import android.util.Log;
 import android.view.Display;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.content.ClipData.Item;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-
-import static java.lang.Math.random;
 
 
-public class MainActivity extends ActionBarActivity {
+
+public class MainActivity extends ActionBarActivity implements AsyncResponse{
 
 
     static String TAG = "MainActivity";
 
 
 
-    //JSON Node Names
-    private static final String TAG_titulo = "titulo";
-    private static final String TAG_descripcion = "contenido";
-    private static final String TAG_fuente = "fuente";
-    private static final String TAG_fecha = "fecha";
 
 
+
+
+    int i_position = 0;
 
     final String[] urls = {
             "http://www.informatica.usach.cl",
@@ -96,6 +79,10 @@ public class MainActivity extends ActionBarActivity {
 
     boolean first = true;
 
+    Context context=null;
+
+    final JsonFeedTask asyncTask = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -110,9 +97,18 @@ public class MainActivity extends ActionBarActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 
         setContentView(R.layout.activity_main);
+
+
+
+        context = getBaseContext();
+
+        if(context == null){
+            Log.d(TAG,"CONTEXT == NULL");
+        }
 
 
         final WebView engine = (WebView) this.findViewById(R.id.webView);
@@ -132,15 +128,19 @@ public class MainActivity extends ActionBarActivity {
         yourListView = (ListView) findViewById(R.id.listView);
 
 
+        yourListView.setSmoothScrollbarEnabled(true);
+
+
+        final JsonFeedTask asyncTask  = new JsonFeedTask(context, yourData);
+
+        asyncTask .execute();
+
+
+        asyncTask.delegate = this;
 
 
 
-
-        new JsonFeedTask(getApplicationContext()).execute();
-
-
-
-        final int TIEMPO = 15000;
+        final int TIEMPO = 5000;
 
         final Handler handler = new Handler();
 
@@ -148,7 +148,34 @@ public class MainActivity extends ActionBarActivity {
             public void run() {
 
                 //TEST
-                refreshNoticias();
+                //refreshNoticias();
+
+
+
+
+                if (first == true && yourData!=null) {
+                    Log.d(TAG, "Primera vez, seteando el adapter");
+
+
+                    int auxsize= yourData.size();
+                    Log.d(TAG,"size: " + auxsize);
+                    for(int j=0;j<auxsize; j++){
+
+                        Log.d(TAG,"FIRST: "+j +" TIME: " + yourData.get(j).getTime() +" - " + yourData.get(j).getFecha() + " - " + yourData.get(j).getTitulo() );
+
+                    }
+
+
+
+                    customAdapter = new ListViewAdapter(context, R.layout.listnoticia, yourData);
+
+                    yourListView.setAdapter(customAdapter);
+
+                    first = false;
+
+                    //listchange();
+
+                }
 
 
                 //FIN-TEST
@@ -193,7 +220,7 @@ public class MainActivity extends ActionBarActivity {
                 }else{
 
                     engine.loadUrl(urls[j]);
-                    Toast.makeText(getApplicationContext(),
+                    Toast.makeText(context,
                             urls[j], Toast.LENGTH_SHORT);
 
 
@@ -238,6 +265,7 @@ public class MainActivity extends ActionBarActivity {
 
     }
 
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -265,243 +293,16 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void processFinish(List<noticiaDIINF> output) {
 
-    public void refreshNoticias() {
-
-            Log.d(TAG, "Refresh News");
-        if(yourData!=null) {
-
-            Log.d(TAG, "Data != null");
-
-            if (first == true) {
-                Log.d(TAG, "Primera vez, seteando el adapter");
-                customAdapter = new ListAdapter(getBaseContext(), R.layout.listnoticia, yourData);
-
-                yourListView.setAdapter(customAdapter);
-
-                first = false;
-
-            }
-
-
-
-
-
-
-            new JsonFeedTask(getApplicationContext()).execute();
-
-
-        }else{
-            Log.d(TAG, "Data == null");
-        }
-
+        yourData = output;
 
     }
 
 
-    class JsonFeedTask extends AsyncTask<String, Void, String> {
 
-        private Exception exception;
-        private Context context= null;
-
-
-        public JsonFeedTask(Context context){
-            this.context = context;
-
-        }
-        @Override
-        protected String doInBackground(String... url) {
-            try {
-                //JSON
-                //URL to get JSON Array
-
-
-                String url_json = "http://sitios.diinf.usach.cl/informaciones/wp-content/themes/led/noticias.json";
-
-                //Create a JSON parser Instance ----- Used JSON parser from Android
-                JSONParser jParser=new JSONParser();
-
-                //Getting JSON string from URL ------ Used JSON Array from Android
-                JSONArray json=jParser.getJSONFromUrl(url_json);
-
-
-                Log.d(TAG, json.toString());
-
-                yourData = new ArrayList<noticiaDIINF>();
-
-                try {
-                    for(int i=0;i<json.length();i++)
-                    {
-                        JSONObject c=json.getJSONObject(i);// Used JSON Object from Android
-
-                        //Storing each Json in a string variable
-
-
-
-                        String TITULO=c.getString(TAG_titulo);
-                        String DESCRIPCION=c.getString(TAG_descripcion);
-                        String FUENTE=c.getString(TAG_fuente);
-                        String FECHA=c.getString(TAG_fecha);
-/*
-                        Log.d(TAG,"TITULO: " + TITULO);
-                        Log.d(TAG,"DESCRIPCION: " + DESCRIPCION);
-                        Log.d(TAG,"FUENTE: " + FUENTE);
-                        Log.d(TAG,"FECHA: " + FECHA);
-*/
-                        yourData.add(new noticiaDIINF(TITULO, DESCRIPCION, FUENTE, FECHA));
-
-
-                    }
-                } catch (JSONException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-
-
-
-
-                //Log.d(TAG,json.toString());
-
-
-                //Fin JSON
-
-
-
-            } catch (Exception e) {
-                this.exception = e;
-
-            }
-            return null;
-        }
-
-        //@TODO: Esto no se ejecuta!!!
-    
-        protected void onPostExecute() {
-            // TODO: check this.exception
-            // TODO: do something with the feed
-
-            customAdapter.notifyDataSetChanged();
-
-
-            yourListView.post(new Runnable() {
-                public void run() {
-
-                    int i = 0;
-
-                    int largo = yourListView.getCount();
-                    int posicion_actual = i;
-
-
-                        while(i<largo){
-
-                            try {
-                                Log.d(TAG, "Entre en el while");
-
-
-                                //Thread.sleep(10000);
-
-
-                                posicion_actual = i % largo;
-                                Log.d(TAG, "i              : " + i);
-                                Log.d(TAG, "largo          : " + largo);
-
-                                Log.d(TAG, "Posicion actual: " + posicion_actual);
-
-                                yourListView.smoothScrollToPosition(posicion_actual);
-
-
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-
-                            i++;
-
-                        }
-
-
-
-                    }
-
-
-
-            });
-
-
-
-        }
-    }
-
-
-
-    public class ListAdapter extends ArrayAdapter<noticiaDIINF> {
-
-        public ListAdapter(Context context, int textViewResourceId) {
-            super(context, textViewResourceId);
-            // TODO Auto-generated constructor stub
-        }
-
-        private List<noticiaDIINF> items;
-
-        public ListAdapter(Context context, int resource, List<noticiaDIINF> items) {
-
-            super(context, resource, items);
-
-            this.items = items;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-
-            View v = convertView;
-
-            TextView tt = null;
-            TextView tt1 = null;
-            TextView tt2 = null;
-            TextView tt3 = null;
-            TextView tt4 = null;
-
-            if (v == null) {
-
-                LayoutInflater vi;
-                vi = LayoutInflater.from(getContext());
-                v = vi.inflate(R.layout.listnoticia, null);
-
-                tt = (TextView) v.findViewById(R.id.titulo);
-                tt1 = (TextView) v.findViewById(R.id.descripcion);
-                tt2 = (TextView) v.findViewById(R.id.fuente);
-                tt3 = (TextView) v.findViewById(R.id.fecha);
-
-            }
-
-            noticiaDIINF p = items.get(position);
-
-            if (p != null) {
-
-                if (tt != null) {
-                    tt.setText(""+ Html.fromHtml(p.getTitulo()));
-                }
-                if (tt1 != null) {
-
-                    tt1.setText(""+Html.fromHtml(p.getDescripcion()));
-                }
-                if (tt2 != null) {
-
-                    tt2.setText(""+Html.fromHtml(p.getFuente()));
-                }
-
-                if (tt3 != null) {
-
-                    tt3.setText(""+Html.fromHtml(p.getFecha()));
-                }
-
-
-            }
-
-
-
-            return v;
-
-        }
-    }
 }
+
+
 
