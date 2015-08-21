@@ -74,10 +74,12 @@ public class MainActivity extends ActionBarActivity implements AsyncResponse{
     };
 
     ListView yourListView = null;
+    int POSITION=0;
     ListAdapter customAdapter = null;
     List<noticiaDIINF> yourData = null;
 
     boolean first = true;
+    boolean adapterLoader = false;
 
     Context context=null;
 
@@ -140,8 +142,8 @@ public class MainActivity extends ActionBarActivity implements AsyncResponse{
 
 
 
-        final int TIEMPO = 5000;
-
+        final int TIEMPO = 30000;
+        final int TIEMPO_BARRA = 120000;
         final Handler handler = new Handler();
 
         final Runnable r = new Runnable() {
@@ -149,7 +151,6 @@ public class MainActivity extends ActionBarActivity implements AsyncResponse{
 
                 //TEST
                 //refreshNoticias();
-
 
 
 
@@ -172,10 +173,38 @@ public class MainActivity extends ActionBarActivity implements AsyncResponse{
                     yourListView.setAdapter(customAdapter);
 
                     first = false;
+                    adapterLoader = true;
 
-                    //listchange();
+
+
 
                 }
+
+                if(yourData!=null &&adapterLoader) {
+                    int last_position = yourData.size() - 1;
+
+                    Log.d(TAG, "ejecutado First view: " + yourListView.getFirstVisiblePosition());
+                    Log.d(TAG, "ejecutado Last  view: " + yourListView.getLastVisiblePosition());
+
+                    if(yourListView.getLastVisiblePosition() == last_position){
+
+                        yourListView.smoothScrollToPositionFromTop(0,0,TIEMPO_BARRA);
+
+                    }
+
+                    if(yourListView.getFirstVisiblePosition() == 0){
+
+                        yourListView.smoothScrollToPositionFromTop(last_position,0,TIEMPO_BARRA);
+
+                    }
+
+                }
+
+
+
+
+
+
 
 
                 //FIN-TEST
@@ -263,7 +292,9 @@ public class MainActivity extends ActionBarActivity implements AsyncResponse{
 
 
 
+
     }
+
 
 
     @Override
