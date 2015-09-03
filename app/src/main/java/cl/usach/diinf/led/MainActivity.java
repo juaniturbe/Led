@@ -14,12 +14,14 @@ import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.BaseAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -69,21 +71,32 @@ public class MainActivity extends ActionBarActivity implements AsyncResponse{
     };
 
 
+
+
+
+
+
+
+
+
+
     String[] images = {
             "http://www.informatica.usach.cl/multimedia/Organigrama-simple.jpg"
     };
 
     ListView yourListView = null;
     int POSITION=0;
-    ListAdapter customAdapter = null;
+    ListViewAdapter customAdapter = null;
     List<noticiaDIINF> yourData = null;
+
+    List<String> links;
 
     boolean first = true;
     boolean adapterLoader = false;
 
     Context context=null;
 
-    final JsonFeedTask asyncTask = null;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,6 +126,14 @@ public class MainActivity extends ActionBarActivity implements AsyncResponse{
         }
 
 
+        links = new ArrayList<String>();
+
+        links.add("http://www.informatica.usach.cl");
+        links.add("http://www.usach.cl");
+        links.add("http://citiaps.cl");
+
+
+
         final WebView engine = (WebView) this.findViewById(R.id.webView);
         final TextView tv_url = (TextView) this.findViewById(R.id.textView3);
 
@@ -132,15 +153,16 @@ public class MainActivity extends ActionBarActivity implements AsyncResponse{
 
         yourListView.setSmoothScrollbarEnabled(true);
 
-
+/*
         final JsonFeedTask asyncTask  = new JsonFeedTask(context, yourData);
 
         asyncTask .execute();
 
 
         asyncTask.delegate = this;
-
-
+*/
+        refreshNews();
+        refreshLinks();
 
         final int TIEMPO = 30000;
         final int TIEMPO_BARRA = 120000;
@@ -151,6 +173,7 @@ public class MainActivity extends ActionBarActivity implements AsyncResponse{
 
                 //TEST
                 //refreshNoticias();
+
 
 
 
@@ -201,6 +224,8 @@ public class MainActivity extends ActionBarActivity implements AsyncResponse{
                 }
 
 
+                refreshNews();
+                refreshLinks();
 
 
 
@@ -211,7 +236,8 @@ public class MainActivity extends ActionBarActivity implements AsyncResponse{
 
 
                 int M = 0;
-                int N = urls.length-1;
+                //int N = urls.length-1;
+                int N = links.size()-1;
                 int L = images.length-1;
                 int prob = 10; // Entre mayor sea este valor, menos probable que aparesca una imagen
 
@@ -248,18 +274,21 @@ public class MainActivity extends ActionBarActivity implements AsyncResponse{
 
                 }else{
 
-                    engine.loadUrl(urls[j]);
-                    Toast.makeText(context,
-                            urls[j], Toast.LENGTH_SHORT);
+                    //engine.loadUrl(urls[j]);
+                    engine.loadUrl(links.get(j));
+                    //Toast.makeText(context, urls[j], Toast.LENGTH_SHORT);
+                    Toast.makeText(context, links.get(j), Toast.LENGTH_SHORT);
 
 
-                    if(urls[j].length() < LARGO){
+                    if(links.get(j).length() < LARGO){
 
-                        tv_url.setText("Link: " + urls[j]);
+                        //tv_url.setText("Link: " + urls[j]);
+                        tv_url.setText("Link: " + links.get(j));
 
                     }else {
 
-                        tv_url.setText("Link: " + urls[j].substring(0, LARGO) + "...");
+                        //tv_url.setText("Link: " + urls[j].substring(0, LARGO) + "...");
+                        tv_url.setText("Link: " + links.get(j).substring(0, LARGO) + "...");
 
                     }
 
@@ -278,6 +307,7 @@ public class MainActivity extends ActionBarActivity implements AsyncResponse{
                 });
 
 
+
                 Log.d(TAG, "Handler ejecutado: " + j);
                 handler.postDelayed(this, TIEMPO);
 
@@ -294,6 +324,31 @@ public class MainActivity extends ActionBarActivity implements AsyncResponse{
 
 
     }
+
+
+    public void refreshNews(){
+
+        Log.d(TAG,"Refresh News");
+        final JsonFeedTask asyncTask  = new JsonFeedTask(context, yourData);
+
+        asyncTask .execute();
+
+
+        asyncTask.delegate = this;
+
+    }
+
+
+    public void refreshLinks(){
+        Log.d(TAG, "Refresh Links");
+        final RSSFeedTask asyncTask  = new RSSFeedTask(context);
+
+        asyncTask.delegate = this;
+        asyncTask .execute();
+
+    }
+
+
 
 
 
@@ -327,10 +382,42 @@ public class MainActivity extends ActionBarActivity implements AsyncResponse{
     @Override
     public void processFinish(List<noticiaDIINF> output) {
 
+
         yourData = output;
 
+        //yourData.addAll(output);
+
+        int auxsize= yourData.size();
+        Log.d(TAG,"size: " + auxsize);
+        for(int j=0;j<auxsize; j++){
+
+            Log.d(TAG,j +" TIME: " + yourData.get(j).getTime() +" - " + yourData.get(j).getFecha() + " - " + yourData.get(j).getTitulo() );
+
+        }
+
+
+
+
+        if(customAdapter!=null) {
+            Log.d(TAG,"refresh");
+            customAdapter.refresh(yourData);
+
+
+            //customAdapter.notifyDataSetChanged();
+            //((BaseAdapter) yourListView.getAdapter()).notifyDataSetChanged();
+
+
+        }
     }
 
+    @Override
+    public void rssFinish(List<String> links) {
+
+
+       this.links = links;
+
+
+    }
 
 
 }

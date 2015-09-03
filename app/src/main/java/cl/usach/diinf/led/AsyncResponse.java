@@ -7,4 +7,6 @@ import java.util.List;
  */
 public interface AsyncResponse {
     void processFinish(List<noticiaDIINF> output);
+
+    void rssFinish(List<String> output);
 }

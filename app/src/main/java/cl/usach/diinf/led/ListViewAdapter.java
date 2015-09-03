@@ -37,6 +37,14 @@ public class ListViewAdapter extends ArrayAdapter<noticiaDIINF> {
         this.context = context;
     }
 
+
+
+    public void refresh(List<noticiaDIINF> items)
+    {
+        this.items = items;
+        notifyDataSetChanged();
+    }
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
